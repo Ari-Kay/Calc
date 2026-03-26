@@ -1,1 +1,971 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>What is a Derivative?</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,700;1,300&family=Nunito:wght@400;600&family=JetBrains+Mono&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/12.4.0/math.min.js"></script>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
+    :root {
+      --pos:    #2563EB;
+      --vel:    #059669;
+      --acc:    #D97706;
+      --tan:    #DC2626;
+      --dark:   #0D1B2A;
+      --mid:    #1B2E42;
+      --body:   #374151;
+      --muted:  #94A3B8;
+      --bg:     #F7F7F3;
+      --white:  #FFFFFF;
+      --border: #E5E7EB;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: var(--bg);
+      color: var(--body);
+      line-height: 1.75;
+    }
+
+    /* ── HERO ───────────────────────────────────── */
+    .hero {
+      background: var(--dark);
+      padding: 80px 24px 72px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 60% 60% at 20% 50%, rgba(37,99,235,0.18) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 50% at 80% 50%, rgba(5,150,105,0.12) 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    .hero-eyebrow {
+      display: inline-block;
+      border: 1px solid rgba(255,255,255,0.18);
+      color: rgba(255,255,255,0.6);
+      padding: 4px 18px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 24px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .hero h1 {
+      font-family: 'Fraunces', serif;
+      font-size: clamp(2.4rem, 6vw, 4rem);
+      font-weight: 300;
+      color: #FFFFFF;
+      line-height: 1.1;
+      margin-bottom: 20px;
+      letter-spacing: -1px;
+    }
+
+    .hero h1 em {
+      font-style: italic;
+      color: #93C5FD;
+    }
+
+    .hero p {
+      color: var(--muted);
+      font-size: 1rem;
+      max-width: 500px;
+      margin: 0 auto;
+      font-weight: 400;
+    }
+
+    /* ── SECTIONS ───────────────────────────────── */
+    .section { padding: 72px 24px; }
+    .section-white { background: var(--white); }
+
+    .section-label {
+      text-align: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+
+    .section-title {
+      text-align: center;
+      font-family: 'Fraunces', serif;
+      font-size: clamp(1.6rem, 3.5vw, 2.2rem);
+      font-weight: 300;
+      color: var(--dark);
+      margin-bottom: 10px;
+      line-height: 1.2;
+    }
+
+    .section-sub {
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.95rem;
+      max-width: 520px;
+      margin: 0 auto 44px;
+    }
+
+    /* ── STORY CARDS ────────────────────────────── */
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      max-width: 920px;
+      margin: 0 auto;
+    }
+
+    .card {
+      background: var(--white);
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      padding: 28px 24px 24px;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 32px rgba(0,0,0,0.08);
+    }
+
+    .card::after {
+      content: '';
+      position: absolute;
+top: 0; left: 0; right: 0;
+      height: 3px;
+      border-radius: 3px 3px 0 0;
+    }
+
+    .card.pos::after { background: var(--pos); }
+    .card.vel::after { background: var(--vel); }
+    .card.acc::after { background: var(--acc); }
+
+    .card-icon { font-size: 1.6rem; margin-bottom: 14px; display: block; }
+
+    .card-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .card.pos .card-label { color: var(--pos); }
+    .card.vel .card-label { color: var(--vel); }
+    .card.acc .card-label { color: var(--acc); }
+
+    .card h3 {
+      font-family: 'Fraunces', serif;
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--dark);
+      margin-bottom: 10px;
+    }
+
+    .card p { font-size: 0.875rem; color: var(--body); line-height: 1.7; }
+
+    .pill {
+      display: inline-block;
+      margin-top: 14px;
+      padding: 5px 12px;
+      border-radius: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+    }
+
+    .card.pos .pill { background: #EFF6FF; color: var(--pos); }
+    .card.vel .pill { background: #ECFDF5; color: var(--vel); }
+    .card.acc .pill { background: #FFFBEB; color: var(--acc); }
+
+    /* ── ANIMATION ──────────────────────────────── */
+    .anim-wrap {
+      max-width: 940px;
+      margin: 0 auto;
+    }
+
+    #sketch-holder {
+      background: var(--white);
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      overflow: hidden;
+      box-shadow: 0 4px 32px rgba(0,0,0,0.07);
+    }
+
+    #sketch-holder canvas { display: block; }
+
+    .controls {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      margin-top: 20px;
+    }
+
+    .btn {
+      padding: 10px 26px;
+      border-radius: 8px;
+      border: none;
+      font-size: 0.875rem;
+      font-family: 'Nunito', sans-serif;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      letter-spacing: 0.3px;
+    }
+
+    .btn-dark  { background: var(--dark); color: #fff; }
+    .btn-dark:hover  { background: var(--mid); }
+    .btn-ghost { background: transparent; color: var(--dark); border: 1px solid var(--border); }
+    .btn-ghost:hover { background: var(--bg); }
+
+    /* ── MATH CHAIN ─────────────────────────────── */
+    .math-box {
+      max-width: 760px;
+      margin: 0 auto;
+      background: var(--dark);
+      border-radius: 20px;
+      padding: 44px 40px 36px;
+      text-align: center;
+    }
+
+    .chain {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
+    }
+
+    .chain-node {
+      padding: 14px 22px;
+      border-radius: 12px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1rem;
+      line-height: 1.5;
+    }
+
+    .chain-node.pos { background: rgba(37,99,235,0.18); color: #93C5FD; }
+    .chain-node.vel { background: rgba(5,150,105,0.18);  color: #6EE7B7; }
+.chain-node.acc { background: rgba(217,119,6,0.18);  color: #FCD34D; }
+
+    .chain-node span {
+      display: block;
+      font-family: 'Nunito', sans-serif;
+      font-size: 0.72rem;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      opacity: 0.7;
+      margin-bottom: 4px;
+    }
+
+    .chain-arrow {
+      color: rgba(255,255,255,0.25);
+      font-size: 0.75rem;
+      text-align: center;
+      line-height: 1.3;
+    }
+
+    .chain-arrow b {
+      display: block;
+      font-size: 1.3rem;
+      font-weight: 300;
+    }
+
+    .math-note {
+      font-family: 'Nunito', sans-serif;
+      color: rgba(255,255,255,0.38);
+      font-size: 0.85rem;
+      line-height: 1.6;
+    }
+
+    /* ── GEOGEBRA ───────────────────────────────── */
+    .ggb-wrap { max-width: 900px; margin: 0 auto; }
+
+    .steps {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--pos);
+      border-radius: 12px;
+      padding: 20px 28px;
+      margin-bottom: 28px;
+    }
+
+    .steps p {
+      font-weight: 600;
+      color: var(--dark);
+      margin-bottom: 12px;
+      font-size: 0.9rem;
+    }
+
+    .steps ol { padding-left: 20px; }
+    .steps li { margin-bottom: 8px; font-size: 0.9rem; color: var(--body); }
+
+    code {
+      font-family: 'JetBrains Mono', monospace;
+      background: #EFF6FF;
+      color: var(--pos);
+      padding: 2px 8px;
+      border-radius: 5px;
+      font-size: 0.85rem;
+    }
+
+    .ggb-frame {
+      border-radius: 14px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+    }
+
+    /* ── FOOTER ─────────────────────────────────── */
+    footer {
+      background: var(--dark);
+      color: rgba(255,255,255,0.35);
+      text-align: center;
+      padding: 36px;
+      font-size: 0.85rem;
+    }
+
+    footer strong { color: rgba(255,255,255,0.7); }
+
+    /* ── PLOTTER ────────────────────────────────── */
+    .plotter-box {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+    }
+
+    .plotter-input-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 18px 20px;
+      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
+
+    .plotter-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1rem;
+      color: var(--pos);
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .plotter-input-row input {
+      flex: 1;
+      min-width: 180px;
+      padding: 9px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.95rem;
+      color: var(--dark);
+      background: var(--bg);
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .plotter-input-row input:focus { border-color: var(--pos); }
+[9:39 am, 24/03/2026] Pahanma: .deriv-display {
+      padding: 10px 20px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.95rem;
+      color: var(--tan);
+      background: #FFF5F5;
+      border-bottom: 1px solid #FEE2E2;
+      font-weight: 600;
+      min-height: 38px;
+    }
+
+    .plot-error {
+      color: #B91C1C;
+      font-size: 0.8rem;
+      padding: 0 20px;
+      min-height: 0;
+      transition: all 0.2s;
+    }
+
+    #plotCanvas {
+      display: block;
+      width: 100%;
+      height: 340px;
+    }
+
+    .plotter-legend {
+      display: flex;
+      gap: 24px;
+      padding: 12px 20px;
+      border-top: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
+
+    .leg-item {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 0.82rem;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .leg-dot {
+      width: 12px; height: 12px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    /* ── RESPONSIVE ─────────────────────────────── */
+    @media (max-width: 640px) {
+      .cards { grid-template-columns: 1fr; }
+      .hero  { padding: 56px 20px; }
+      .section { padding: 52px 16px; }
+      .math-box { padding: 28px 20px; }
+      .chain-node { padding: 10px 14px; font-size: 0.85rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- HERO -->
+<header class="hero">
+  <div class="hero-eyebrow">Visual Calculus</div>
+  <h1>What is a<br><em>Derivative?</em></h1>
+  <p>Understand differentiation through the story of a moving car — before touching a single formula.</p>
+</header>
+
+<!-- STORY -->
+<section class="section section-white">
+  <div class="section-label">The Intuition</div>
+  <h2 class="section-title">Three things that describe any motion</h2>
+  <p class="section-sub">Imagine a car driving along a straight road. Every moment of its journey is captured by three connected ideas.</p>
+
+  <div class="cards">
+    <div class="card pos">
+      <span class="card-icon">📍</span>
+      <div class="card-label">Position</div>
+      <h3>Where is it?</h3>
+      <p>At any moment in time, the car is somewhere along the road. That location is its <strong>position</strong>. Our car's position grows as t².</p>
+      <div class="pill">s(t) = t²</div>
+    </div>
+    <div class="card vel">
+      <span class="card-icon">💨</span>
+      <div class="card-label">Velocity</div>
+      <h3>How fast is it going?</h3>
+      <p><strong>Velocity is the rate of change of position.</strong> How quickly is the position updating each second? That's exactly what a derivative measures. The derivative of s(t) gives us velocity.</p>
+      <div class="pill">v(t) = 2t</div>
+    </div>
+    <div class="card acc">
+      <span class="card-icon">🚀</span>
+      <div class="card-label">Acceleration</div>
+      <h3>Is it speeding up?</h3>
+      <p><strong>Acceleration is the rate of change of velocity.</strong> Is the car going faster or slower? The derivative of velocity gives us acceleration — here it's a constant 2, meaning the car speeds up steadily.</p>
+      <div class="pill">a(t) = 2</div>
+    </div>
+  </div>
+</section>
+
+<!-- ANIMATION -->
+<section class="section">
+  <div class="section-label">The Visual</div>
+  <h2 class="section-title">Watch the derivatives build themselves</h2>
+  <p class="section-sub">The red tangent line shows the slope of the curve at each instant. That slope <em>is</em> the derivative — and it becomes the value plotted on the next graph.</p>
+
+  <div class="anim-wrap">
+    <div id="sketch-holder"></div>
+    <div class="controls">
+      <button class="btn btn-dark" id="playBtn" onclick="togglePlay()">⏸ Pause</button>
+      <button class="btn btn-ghost" onclick="restartAnim()">↺ Restart</button>
+    </div>
+  </div>
+</section>
+<!-- MATH CHAIN -->
+<section class="section section-white">
+  <div class="section-label">The Mathematics</div>
+  <h2 class="section-title">The chain of derivatives</h2>
+  <p class="section-sub">Each arrow means: find the rate of change. That's all differentiation is.</p>
+
+  <div class="math-box">
+    <div class="chain">
+      <div class="chain-node pos">
+        <span>Position</span>
+        s(t) = t²
+      </div>
+      <div class="chain-arrow">
+        <b>→</b>
+        d/dt
+      </div>
+      <div class="chain-node vel">
+        <span>Velocity</span>
+        v(t) = 2t
+      </div>
+      <div class="chain-arrow">
+        <b>→</b>
+        d/dt
+      </div>
+      <div class="chain-node acc">
+        <span>Acceleration</span>
+        a(t) = 2
+      </div>
+    </div>
+    <p class="math-note">
+      The position graph curves upward · the velocity graph is a straight line · the acceleration is flat.<br>
+      Each shape is exactly what the maths predicts — and exactly what you saw in the animation.
+    </p>
+  </div>
+</section>
+
+<!-- INTERACTIVE PLOTTER -->
+<section class="section">
+  <div class="section-label">Try It Yourself</div>
+  <h2 class="section-title">Plot any function and its derivative</h2>
+  <p class="section-sub">Type any function below — it plots the original curve and its derivative instantly, and shows you the derivative equation.</p>
+
+  <div class="ggb-wrap">
+    <div class="steps">
+      <p>Try these examples:</p>
+      <ol>
+        <li>Type <code>x^2</code> — the classic parabola. Derivative is 2x (a straight line)</li>
+        <li>Try <code>x^3</code> — notice the derivative (3x²) dips to zero at the flat point</li>
+        <li>Try <code>sin(x)</code> — the derivative is cos(x), also a wave, but shifted</li>
+        <li>Where the blue curve is flat → the red curve crosses zero. Always.</li>
+      </ol>
+    </div>
+
+    <div class="plotter-box">
+      <div class="plotter-input-row">
+        <span class="plotter-label">f(x) =</span>
+        <input type="text" id="fnInput" value="x^2" placeholder="e.g. x^3, sin(x), x^2 + 2*x" />
+        <button class="btn btn-dark" onclick="plotFn()">Plot</button>
+      </div>
+      <div id="deriv-display" class="deriv-display">f'(x) = 2x</div>
+      <div id="plot-error" class="plot-error"></div>
+      <canvas id="plotCanvas"></canvas>
+      <div class="plotter-legend">
+        <span class="leg-item"><span class="leg-dot" style="background:var(--pos)"></span>f(x) — original function</span>
+        <span class="leg-item"><span class="leg-dot" style="background:var(--tan)"></span>f'(x) — derivative</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <p>Made to help <strong>calculus click</strong>. Share freely with anyone who needs it. 🧮</p>
+</footer>
+
+<!-- ── SCRIPTS ──────────────────────────────────────────────── -->
+<script>
+  let playing = true;
+
+  function togglePlay() {
+    playing = !playing;
+    document.getElementById('playBtn').textContent = playing ? '⏸ Pause' : '▶ Play';
+  }
+
+  function restartAnim() {
+    if (window._restart) window._restart();
+    playing = true;
+    document.getElementById('playBtn').textContent = '⏸ Pause';
+  }
+
+  // ── p5.js Sketch ────────────────────────────────────────────
+  const sketch = (p) => {
+
+    const T_MAX   = 3;
+    const SPEED   = 0.013;
+    const PAD_L   = 54;
+    const PAD_R   = 10;
+    const PAD_T   = 46;
+    const PAD_B   = 44;
+    const H       = 300;
+
+    // Palette
+    const C_POS  = '#2563EB';
+    const C_VEL  = '#059669';
+    const C_ACC  = '#D97706';
+    const C_TAN  = '#DC2626';
+    const C_AXIS = '#D1D5DB';
+    const C_TICK = '#9CA3AF';
+    const C_BG   = '#FFFFFF';
+
+    let t = 0;
+    let posH = [], velH = [], accH = [];
+
+    window._restart = () => {
+      t = 0; posH = []; velH = []; accH = [];
+    };
+
+    p.setup = () => {
+      let w = document.getElementById('sketch-holder').offsetWidth || 900;
+      p.createCanvas(w, H).parent('sketch-holder');
+    };
+
+    p.windowResized = () => {
+      let w = document.getElementById('sketch-holder').offsetWidth || 900;
+      p.resizeCanvas(w, H);
+      window._restart();
+    };
+
+    p.draw = () => {
+      p.background(C_BG);
+
+      if (playing) {
+        t += SPEED;
+        if (t > T_MAX) window._restart();
+      }
+
+      let s = t * t;
+      let v = 2 * t;
+      let a = 2;
+
+      if (playing) {
+        posH.push({ t, val: s });
+        velH.push({ t, val: v });
+        accH.push({ t, val: a });
+      }
+
+      let pw = p.width / 3;
+
+      drawGraph({ xOff: 0,    hist: posH, fn: ti => ti*ti, maxVal: 9, col: C_POS, title: 'Position — s(t) = t²',    yLbl: 'metres',  showTan: true,  tanSlope: v });
+      drawGraph({ xOff: pw,   hist: velH, fn: ti => 2*ti,  maxVal: 6, col: C_VEL, title: 'Velocity — v(t) = 2t',    yLbl: 'm / s',   showTan: false, tanSlope: 0 });
+      drawGraph({ xOff: 2*pw, hist: accH, fn: () => 2,     maxVal: 4, col: C_ACC, title: 'Acceleration — a(t) = 2', yLbl: 'm / s²',  showTan: false, tanSlope: 0 });
+
+      // Dividers
+      p.stroke('#F3F4F6');
+      p.strokeWeight(1);
+      p.line(pw,   0, pw,   H);
+      p.line(2*pw, 0, 2*pw, H);
+    };
+
+    function drawGraph({ xOff, hist, fn, maxVal, col, title, yLbl, showTan, tanSlope }) {
+      let pw = p.width / 3;
+      let gL = xOff + PAD_L;
+      let gR = xOff + pw - PAD_R;
+      let gT = PAD_T;
+      let gB = H - PAD_B;
+
+      const mx  = ti  => p.map(ti,  0, T_MAX,  gL, gR);
+      const my  = val => p.map(val, 0, maxVal, gB, gT);
+
+      // Title
+      p.noStroke();
+      p.fill(col);
+      p.textFont('Nunito');
+      p.textSize(10);
+      p.textStyle(p.BOLD);
+      p.textAlign(p.CENTER, p.TOP);
+      p.text(title, xOff + pw / 2, 10);
+      p.textStyle(p.NORMAL);
+
+      // Y axis label (rotated)
+      p.push();
+      p.fill(C_TICK);
+      p.textSize(8.5);
+      p.textAlign(p.CENTER, p.CENTER);
+      p.translate(xOff + 10, (gT + gB) / 2);
+      p.rotate(-p.HALF_PI);
+      p.text(yLbl, 0, 0);
+      p.pop();
+
+      // X axis label
+      p.noStroke();
+      p.fill(C_TICK);
+      p.textSize(8.5);
+      p.textAlign(p.CENTER, p.BOTTOM);
+      p.text('time  (s)', xOff + pw / 2, H - 4);
+
+      // Axes
+      p.stroke(C_AXIS);
+      p.strokeWeight(1.5);
+      p.line(gL, gT, gL, gB);
+      p.line(gL, gB, gR, gB);
+
+      // Y ticks — 4 lines at 25%, 50%, 75%, 100%
+      let niceYTicks = getNiceTicks(maxVal, 4);
+      for (let val of niceYTicks) {
+        let y = my(val);
+        p.stroke(C_AXIS);
+        p.strokeWeight(1);
+        p.line(gL - 4, y, gL, y);
+        p.noStroke();
+        p.fill(C_TICK);
+        p.textSize(8);
+        p.textAlign(p.RIGHT, p.CENTER);
+        p.text(val, gL - 7, y);
+      }
+
+      // X ticks at 1, 2, 3
+      for (let i = 1; i <= T_MAX; i++) {
+        let x = mx(i);
+        p.stroke(C_AXIS);
+        p.strokeWeight(1);
+        p.line(x, gB, x, gB + 4);
+        p.noStroke();
+        p.fill(C_TICK);
+        p.textSize(8);
+        p.textAlign(p.CENTER, p.TOP);
+        p.text(i, x, gB + 5);
+      }
+
+      // Ghost curve (full, faint, dashed)
+      p.drawingContext.setLineDash([3, 5]);
+      p.drawingContext.globalAlpha = 0.15;
+      p.stroke(col);
+      p.strokeWeight(1.5);
+      p.noFill();
+      p.beginShape();
+      for (let ti = 0; ti <= T_MAX; ti += 0.04) {
+        let v = fn(ti);
+        if (v <= maxVal + 1) p.vertex(mx(ti), my(v));
+      }
+      p.endShape();
+      p.drawingContext.setLineDash([]);
+      p.drawingContext.globalAlpha = 1;
+
+      // Built-up curve
+      if (hist.length > 1) {
+        p.stroke(col);
+        p.strokeWeight(2.5);
+        p.noFill();
+        p.beginShape();
+        for (let pt of hist) {
+          if (pt.val <= maxVal + 1) p.vertex(mx(pt.t), my(pt.val));
+        }
+        p.endShape();
+      }
+
+      // Current dot
+      if (hist.length > 0) {
+        let lp = hist[hist.length - 1];
+        if (lp.val <= maxVal + 1) {
+          p.fill(col);
+          p.noStroke();
+          p.circle(mx(lp.t), my(lp.val), 12);
+          p.fill(C_BG);
+          p.circle(mx(lp.t), my(lp.val), 5);
+        }
+      }
+
+      // Tangent line (position graph only)
+      if (showTan && hist.length > 0) {
+        let lp  = hist[hist.length - 1];
+        let x0  = mx(lp.t);
+        let y0  = my(lp.val);
+
+        // Convert math-slope to pixel-slope
+        // pixSlope = tanSlope × (Δy_pixel/Δval) / (Δx_pixel/Δt)
+        let pixSlope = tanSlope * ((gT - gB) / maxVal) / ((gR - gL) / T_MAX);
+
+        let dx = 42;
+        p.drawingContext.setLineDash([4, 3]);
+        p.stroke(C_TAN);
+        p.strokeWeight(1.8);
+        p.line(x0 - dx, y0 - pixSlope * dx, x0 + dx, y0 + pixSlope * dx);
+        p.drawingContext.setLineDash([]);
+
+        // Slope label
+        p.noStroke();
+        p.fill(C_TAN);
+        p.textSize(8.5);
+        p.textAlign(p.LEFT, p.BOTTOM);
+        p.text('slope = ' + fmtNum(tanSlope, 1), x0 + 7, y0 - 3);
+      }
+    }
+
+    // Generate up to n nice round tick values between 0 and max
+    function getNiceTicks(max, n) {
+      let step = niceStep(max / n);
+      let ticks = [];
+      for (let v = step; v <= max + 0.001; v = Math.round((v + step) * 1000) / 1000) {
+        ticks.push(Math.round(v * 10) / 10);
+      }
+      return ticks;
+    }
+
+    function niceStep(roughStep) {
+      let magnitude = Math.pow(10, Math.floor(Math.log10(roughStep)));
+      let fractions = [1, 2, 2.5, 5, 10];
+      for (let f of fractions) {
+        if (f * magnitude >= roughStep) return f * magnitude;
+      }
+      return magnitude * 10;
+    }
+
+    function fmtNum(n, decimals) {
+      return n.toFixed(decimals);
+    }
+  };
+
+  new p5(sketch);
+</script>
+
+<script>
+  // ── Interactive Plotter ─────────────────────────────────────
+  const plotCanvas = document.getElementById('plotCanvas');
+  const plotCtx    = plotCanvas.getContext('2d');
+
+  function resizeCanvas() {
+    plotCanvas.width  = plotCanvas.offsetWidth  * window.devicePixelRatio;
+    plotCanvas.height = plotCanvas.offsetHeight * window.devicePixelRatio;
+    plotCtx.scale(window.devicePixelRatio, window.devicePixelRatio);
+  }
+
+  function plotFn() {
+    const errBox   = document.getElementById('plot-error');
+    const derivBox = document.getElementById('deriv-display');
+    const raw      = document.getElementById('fnInput').value.trim();
+
+    errBox.textContent = '';
+
+    let expr, derivExpr, derivStr;
+
+    try {
+      expr      = math.parse(raw);
+      derivExpr = math.derivative(expr, 'x');
+      derivStr  = derivExpr.toString();
+      derivBox.textContent = "f'(x) = " + derivStr;
+    } catch (e) {
+      errBox.textContent = '⚠ Could not parse function. Try: x^2, sin(x), x^3 + 2*x';
+      return;
+    }
+
+    resizeCanvas();
+
+    const W  = plotCanvas.offsetWidth;
+    const H  = plotCanvas.offsetHeight;
+    const PL = 52, PR = 16, PT = 20, PB = 40;
+    const gW = W - PL - PR;
+    const gH = H - PT - PB;
+
+    // Sample function and derivative, auto-range y
+    const X_MIN = -4, X_MAX = 4, N = 400;
+    const xs = [], fVals = [], dVals = [];
+
+    for (let i = 0; i <= N; i++) {
+      const x = X_MIN + (X_MAX - X_MIN) * i / N;
+      xs.push(x);
+      try {
+        const fv = math.evaluate(raw,     { x });
+        const dv = math.evaluate(derivStr, { x });
+        fVals.push(isFinite(fv) ? fv : null);
+        dVals.push(isFinite(dv) ? dv : null);
+      } catch {
+        fVals.push(null);
+        dVals.push(null);
+      }
+    }
+
+    // Y range — percentile clip to avoid blowup
+    const allVals = [...fVals, ...dVals].filter(v => v !== null);
+    if (!allVals.length) { errBox.textContent = '⚠ Function produced no valid values in range.'; return; }
+
+    const sorted = [...allVals].sort((a,b) => a-b);
+    const lo = sorted[Math.floor(sorted.length * 0.05)];
+    const hi = sorted[Math.floor(sorted.length * 0.95)];
+    const pad = Math.max((hi - lo) * 0.2, 0.5);
+    const Y_MIN = lo - pad, Y_MAX = hi + pad;
+
+    const mx = x   => PL + (x   - X_MIN) / (X_MAX - X_MIN) * gW;
+    const my = val => PT + (1 - (val - Y_MIN) / (Y_MAX - Y_MIN)) * gH;
+
+    // Clear
+    plotCtx.clearRect(0, 0, W, H);
+    plotCtx.fillStyle = '#FFFFFF';
+    plotCtx.fillRect(0, 0, W, H);
+
+    // Grid lines
+    plotCtx.strokeStyle = '#F3F4F6';
+    plotCtx.lineWidth = 1;
+    for (let x = Math.ceil(X_MIN); x <= X_MAX; x++) {
+      plotCtx.beginPath(); plotCtx.moveTo(mx(x), PT); plotCtx.lineTo(mx(x), PT+gH); plotCtx.stroke();
+    }
+    for (let i = 0; i <= 4; i++) {
+      const v = Y_MIN + (Y_MAX - Y_MIN) * i / 4;
+      const y = my(v);
+      plotCtx.beginPath(); plotCtx.moveTo(PL, y); plotCtx.lineTo(PL+gW, y); plotCtx.stroke();
+    }
+
+    // Axes
+    plotCtx.strokeStyle = '#D1D5DB';
+    plotCtx.lineWidth = 1.5;
+
+    // x=0 vertical axis
+    if (X_MIN < 0 && X_MAX > 0) {
+      plotCtx.beginPath(); plotCtx.moveTo(mx(0), PT); plotCtx.lineTo(mx(0), PT+gH); plotCtx.stroke();
+    }
+    // y=0 horizontal axis
+    if (Y_MIN < 0 && Y_MAX > 0) {
+      plotCtx.beginPath(); plotCtx.moveTo(PL, my(0)); plotCtx.lineTo(PL+gW, my(0)); plotCtx.stroke();
+    }
+
+    // Border axes
+    plotCtx.strokeStyle = '#D1D5DB';
+    plotCtx.lineWidth = 1.5;
+    plotCtx.strokeRect(PL, PT, gW, gH);
+
+    // Tick labels
+    plotCtx.fillStyle = '#9CA3AF';
+    plotCtx.font = '10px JetBrains Mono, monospace';
+    plotCtx.textAlign = 'center';
+    for (let x = Math.ceil(X_MIN); x <= X_MAX; x++) {
+      plotCtx.fillText(x, mx(x), PT + gH + 16);
+    }
+    plotCtx.textAlign = 'right';
+    for (let i = 0; i <= 4; i++) {
+      const v = Y_MIN + (Y_MAX - Y_MIN) * i / 4;
+      plotCtx.fillText(v.toFixed(1), PL - 6, my(v) + 4);
+    }
+
+    // Draw curve helper
+    function drawCurve(vals, color, dash=[]) {
+      plotCtx.save();
+      plotCtx.strokeStyle = color;
+      plotCtx.lineWidth   = 2.5;
+      plotCtx.lineJoin    = 'round';
+      plotCtx.setLineDash(dash);
+      plotCtx.beginPath();
+      let penDown = false;
+      for (let i = 0; i < xs.length; i++) {
+        const v = vals[i];
+        if (v === null || v < Y_MIN - (Y_MAX-Y_MIN) || v > Y_MAX + (Y_MAX-Y_MIN)) { penDown = false; continue; }
+        const cx = mx(xs[i]), cy = my(v);
+        if (!penDown) { plotCtx.moveTo(cx, cy); penDown = true; }
+        else          { plotCtx.lineTo(cx, cy); }
+      }
+      plotCtx.stroke();
+      plotCtx.restore();
+    }
+
+    drawCurve(fVals, '#2563EB');
+    drawCurve(dVals, '#DC2626', [6, 4]);
+  }
+
+  // Allow Enter key
+  document.getElementById('fnInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') plotFn();
+  });
+
+  // Initial plot on load
+  window.addEventListener('load', () => { resizeCanvas(); plotFn(); });
+  window.addEventListener('resize', () => { resizeCanvas(); plotFn(); });
+</script>
+</body>
+</html>
