@@ -33,6 +33,72 @@
       line-height: 1.75;
     }
 
+    /* ── NAV ────────────────────────────────────── */
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(13, 27, 42, 0.92);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 52px;
+    }
+
+    .nav-brand {
+      font-family: 'Fraunces', serif;
+      font-size: 1rem;
+      color: #fff;
+      font-weight: 300;
+      letter-spacing: -0.3px;
+      text-decoration: none;
+    }
+
+    .nav-brand em { font-style: italic; color: #93C5FD; }
+
+    .nav-links {
+      display: flex;
+      gap: 4px;
+      list-style: none;
+    }
+
+    .nav-links a {
+      text-decoration: none;
+      color: rgba(255,255,255,0.55);
+      font-size: 0.82rem;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: 6px;
+      transition: color 0.15s, background 0.15s;
+      white-space: nowrap;
+    }
+
+    .nav-links a:hover {
+      color: #fff;
+      background: rgba(255,255,255,0.08);
+    }
+
+    .nav-links a.coming {
+      color: rgba(255,255,255,0.25);
+      cursor: default;
+      pointer-events: none;
+    }
+
+    .nav-links a.coming::after {
+      content: ' soon';
+      font-size: 0.68rem;
+      opacity: 0.6;
+    }
+
+    /* hide nav links on very small screens */
+    @media (max-width: 480px) {
+      .nav-links { display: none; }
+    }
+    
     /* ── HERO ───────────────────────────────────── */
     .hero {
       background: var(--dark);
