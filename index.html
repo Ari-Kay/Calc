@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Visual Maths — Calculus & Linear Algebra</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,700;1,9..144,300;1,9..144,400&family=DM+Sans:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --dark:   #0A1628;
+      --mid:    #152238;
+      --blue:   #2563EB;
+      --teal:   #0D9488;
+      --amber:  #D97706;
+      --white:  #FFFFFF;
+      --off:    #F4F3EE;
+      --muted:  #64748B;
+      --border: rgba(255,255,255,0.09);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--dark);
+      color: var(--white);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── NAV ─────────────────────────────────────── */
+    .nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 200;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 32px;
+      background: rgba(10, 22, 40, 0.85);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-brand {
+      font-family: 'Fraunces', serif;
+      font-size: 1.05rem;
+      font-weight: 300;
+      color: var(--white);
+      text-decoration: none;
+      letter-spacing: -0.3px;
+    }
+
+    .nav-brand em { font-style: italic; color: #7DD3FC; }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      list-style: none;
+    }
+
+    .nav-links > li { position: relative; }
+
+    .nav-links > li > a {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      text-decoration: none;
+      color: rgba(255,255,255,0.55);
+      font-size: 0.85rem;
+      font-weight: 500;
+      padding: 7px 14px;
+      border-radius: 7px;
+      transition: color 0.15s, background 0.15s;
+      white-space: nowrap;
+    }
+
+    .nav-links > li > a:hover,
+    .nav-links > li:hover > a {
+      color: var(--white);
+      background: rgba(255,255,255,0.07);
+    }
+
+    .chevron {
+      width: 12px; height: 12px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      transition: transform 0.2s;
+    }
+
+    .nav-links > li:hover .chevron { transform: rotate(180deg); }
+
+    /* dropdown */
+    .dropdown {
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 0;
+      min-width: 210px;
+      background: #111F35;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      padding: 6px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-6px);
+      transition: opacity 0.18s, transform 0.18s, visibility 0.18s;
+      list-style: none;
+    }
+
+    .nav-links > li:hover .dropdown {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+
+    .dropdown li a {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: rgba(255,255,255,0.6);
+      font-size: 0.83rem;
+      font-weight: 500;
+      padding: 9px 12px;
+      border-radius: 7px;
+      transition: color 0.12s, background 0.12s;
+    }
+
+    .dropdown li a:hover {
+      color: var(--white);
+      background: rgba(255,255,255,0.07);
+    }
+
+    .dropdown li a.disabled {
+      opacity: 0.35;
+      pointer-events: none;
+    }
+
+    .drop-icon {
+      width: 22px; height: 22px;
+      border-radius: 5px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.72rem;
+      font-family: 'JetBrains Mono', monospace;
+      flex-shrink: 0;
+    }
+
+    .drop-icon.blue  { background: rgba(37,99,235,0.25);  color: #93C5FD; }
+    .drop-icon.teal  { background: rgba(13,148,136,0.25); color: #5EEAD4; }
+    .drop-icon.amber { background: rgba(217,119,6,0.25);  color: #FCD34D; }
+    .drop-icon.rose  { background: rgba(225,29,72,0.2);   color: #FDA4AF; }
+
+    .badge {
+      margin-left: auto;
+      font-size: 0.6rem;
+      font-family: 'JetBrains Mono', monospace;
+      background: rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.3);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    .dropdown-divider {
+      height: 1px;
+      background: rgba(255,255,255,0.07);
+      margin: 4px 6px;
+    }
+
+    /* ── HERO ────────────────────────────────────── */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 100px 24px 60px;
+      position: relative;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+      background-size: 48px 48px;
+      mask-image: radial-gradient(ellipse 80% 70% at 50% 40%, black 30%, transparent 100%);
+      -webkit-mask-image: radial-gradient(ellipse 80% 70% at 50% 40%, black 30%, transparent 100%);
+    }
+
+    .hero::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 55% 45% at 25% 60%, rgba(37,99,235,0.15) 0%, transparent 60%),
+        radial-gradient(ellipse 45% 40% at 75% 40%, rgba(13,148,136,0.12) 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    .hero-content { position: relative; z-index: 2; max-width: 720px; }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid rgba(255,255,255,0.12);
+      color: rgba(255,255,255,0.5);
+      padding: 5px 16px;
+      border-radius: 20px;
+      font-size: 0.72rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 28px;
+      font-family: 'JetBrains Mono', monospace;
+      animation: fadeUp 0.6s ease both;
+    }
+
+    .eyebrow-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: #7DD3FC;
+      animation: pulse 2s ease infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.7); }
+    }
+
+    h1 {
+      font-family: 'Fraunces', serif;
+      font-size: clamp(3rem, 7vw, 5.2rem);
+      font-weight: 300;
+      line-height: 1.05;
+      letter-spacing: -2px;
+      margin-bottom: 24px;
+      animation: fadeUp 0.6s 0.1s ease both;
+    }
+
+    h1 em { font-style: italic; color: #7DD3FC; }
+    h1 .line2 { display: block; color: rgba(255,255,255,0.4); }
+
+    .hero-sub {
+      font-size: 1.05rem;
+      color: rgba(255,255,255,0.45);
+      max-width: 480px;
+      margin: 0 auto 44px;
+      line-height: 1.7;
+      animation: fadeUp 0.6s 0.2s ease both;
+    }
+
+    .hero-cta {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+      animation: fadeUp 0.6s 0.3s ease both;
+    }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--blue);
+      color: var(--white);
+      text-decoration: none;
+      padding: 12px 28px;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: background 0.15s, transform 0.15s;
+    }
+
+    .btn-primary:hover { background: #1D4ED8; transform: translateY(-1px); }
+
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255,255,255,0.06);
+      color: rgba(255,255,255,0.7);
+      text-decoration: none;
+      padding: 12px 28px;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      border: 1px solid rgba(255,255,255,0.1);
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .btn-secondary:hover { background: rgba(255,255,255,0.1); color: var(--white); }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── TOPICS GRID ─────────────────────────────── */
+    .topics {
+      padding: 80px 24px;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    .section-label {
+      text-align: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.25);
+      margin-bottom: 12px;
+    }
+
+    .section-title {
+      text-align: center;
+      font-family: 'Fraunces', serif;
+      font-size: clamp(1.6rem, 3vw, 2rem);
+      font-weight: 300;
+      color: var(--white);
+      margin-bottom: 8px;
+      letter-spacing: -0.5px;
+    }
+
+    .section-sub {
+      text-align: center;
+      color: rgba(255,255,255,0.3);
+      font-size: 0.9rem;
+      margin-bottom: 48px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .topic-card {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 16px;
+      padding: 32px 28px;
+      text-decoration: none;
+      color: inherit;
+      transition: background 0.2s, border-color 0.2s, transform 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .topic-card:not(.disabled):hover {
+      background: rgba(255,255,255,0.055);
+      border-color: rgba(255,255,255,0.14);
+      transform: translateY(-2px);
+    }
+
+    .topic-card.disabled { opacity: 0.45; }
+
+    .topic-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      border-radius: 2px 2px 0 0;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .topic-card:not(.disabled):hover::before { opacity: 1; }
+    .topic-card.blue::before { background: linear-gradient(90deg, #2563EB, #7DD3FC); }
+    .topic-card.teal::before { background: linear-gradient(90deg, #0D9488, #5EEAD4); }
+
+    .topic-tag {
+      display: inline-block;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      padding: 3px 10px;
+      border-radius: 4px;
+      margin-bottom: 16px;
+      font-weight: 500;
+    }
+
+    .topic-card.blue .topic-tag { background: rgba(37,99,235,0.2);  color: #93C5FD; }
+    .topic-card.teal .topic-tag { background: rgba(13,148,136,0.2); color: #5EEAD4; }
+
+    .topic-card h3 {
+      font-family: 'Fraunces', serif;
+      font-size: 1.4rem;
+      font-weight: 300;
+      color: var(--white);
+      margin-bottom: 10px;
+      letter-spacing: -0.3px;
+    }
+
+    .topic-card p {
+      font-size: 0.875rem;
+      color: rgba(255,255,255,0.38);
+      line-height: 1.7;
+      margin-bottom: 24px;
+    }
+
+    .subtopics { display: flex; flex-wrap: wrap; gap: 6px; }
+
+    .subtopic {
+      font-size: 0.75rem;
+      padding: 4px 10px;
+      border-radius: 5px;
+      background: rgba(255,255,255,0.05);
+      color: rgba(255,255,255,0.4);
+      font-weight: 500;
+      text-decoration: none;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .subtopic.live:hover {
+      background: rgba(255,255,255,0.1);
+      color: var(--white);
+    }
+
+    .subtopic.live { color: rgba(255,255,255,0.65); }
+
+    .topic-card-footer {
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 1px solid rgba(255,255,255,0.06);
+      font-size: 0.78rem;
+      color: rgba(255,255,255,0.22);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .topic-card-footer .live-count { color: #4ADE80; }
+
+    /* ── FOOTER ──────────────────────────────────── */
+    footer {
+      border-top: 1px solid rgba(255,255,255,0.06);
+      text-align: center;
+      padding: 36px;
+      color: rgba(255,255,255,0.2);
+      font-size: 0.82rem;
+    }
+
+    footer strong { color: rgba(255,255,255,0.45); }
+
+    /* ── RESPONSIVE ──────────────────────────────── */
+    @media (max-width: 620px) {
+      .grid { grid-template-columns: 1fr; }
+      .nav { padding: 0 16px; }
+      h1 { letter-spacing: -1px; }
+    }
+
+    @media (max-width: 480px) {
+      .nav-links { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <a href="index.html" class="nav-brand">Visual <em>Maths</em></a>
+  <ul class="nav-links">
+
+    <li>
+      <a href="#">
+        Calculus
+        <svg class="chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+      </a>
+      <ul class="dropdown">
+        <li>
+          <a href="derivatives.html">
+            <span class="drop-icon blue">∂</span>
+            Derivatives
+          </a>
+        </li>
+        <li>
+          <a href="#" class="disabled">
+            <span class="drop-icon teal">lim</span>
+            Limits
+            <span class="badge">soon</span>
+          </a>
+        </li>
+        <li>
+          <a href="#" class="disabled">
+            <span class="drop-icon amber">∫</span>
+            Integrals
+            <span class="badge">soon</span>
+          </a>
+        </li>
+        <div class="dropdown-divider"></div>
+        <li>
+          <a href="#" class="disabled">
+            <span class="drop-icon rose">⚗</span>
+            Applied Problems
+            <span class="badge">soon</span>
+          </a>
+        </li>
+      </ul>
+    </li>
+
+    <li>
+      <a href="#" style="opacity:0.35; pointer-events:none;">
+        Linear Algebra
+        <svg class="chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+      </a>
+    </li>
+
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-content">
+    <div class="eyebrow">
+      <span class="eyebrow-dot"></span>
+      Visual Learning
+    </div>
+    <h1>
+      Maths that<br>
+      <em>actually</em>
+      <span class="line2">makes sense.</span>
+    </h1>
+    <p class="hero-sub">
+      Calculus and linear algebra explained through animation and intuition — not memorisation.
+      Built for students who want to understand, not just pass.
+    </p>
+    <div class="hero-cta">
+      <a href="derivatives.html" class="btn-primary">Start with Derivatives →</a>
+      <a href="#topics" class="btn-secondary">Browse Topics</a>
+    </div>
+  </div>
+</section>
+
+<!-- TOPICS -->
+<section class="topics" id="topics">
+  <div class="section-label">What's Here</div>
+  <h2 class="section-title">Pick where to start</h2>
+  <p class="section-sub">Each topic builds intuition first, mechanics second.</p>
+
+  <div class="grid">
+
+    <div class="topic-card blue">
+      <div class="topic-tag">Calculus</div>
+      <h3>The mathematics<br>of change.</h3>
+      <p>From understanding what a limit really means to seeing why integration is just accumulated change — built visually from the ground up.</p>
+      <div class="subtopics">
+        <a href="derivatives.html" class="subtopic live">Derivatives ↗</a>
+        <span class="subtopic">Limits</span>
+        <span class="subtopic">Integrals</span>
+        <span class="subtopic">Applied Problems</span>
+      </div>
+      <div class="topic-card-footer"><span class="live-count">1</span> of 4 topics live</div>
+    </div>
+
+    <div class="topic-card teal disabled">
+      <div class="topic-tag">Linear Algebra</div>
+      <h3>The mathematics<br>of space.</h3>
+      <p>Vectors, matrices, transformations and determinants — understood visually before you ever write a calculation.</p>
+      <div class="subtopics">
+        <span class="subtopic">Vectors</span>
+        <span class="subtopic">Matrices</span>
+        <span class="subtopic">Elimination</span>
+        <span class="subtopic">Determinants</span>
+      </div>
+      <div class="topic-card-footer">0 of 4 topics live — coming soon</div>
+    </div>
+
+  </div>
+</section>
+
+<footer>
+  <p>Made to help <strong>maths click.</strong> Free for everyone, forever. 🧮</p>
+</footer>
+
+</body>
+</html>
