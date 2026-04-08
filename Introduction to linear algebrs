@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Linear Algebra — Visual Intuition</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #0d0d0f;
+    color: #e8e4dc;
+    font-family: 'JetBrains Mono', monospace;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  header {
+    padding: 2rem 2.5rem 1rem;
+    border-bottom: 1px solid #1e1e24;
+  }
+
+  header h1 {
+    font-family: 'Instrument Serif', serif;
+    font-size: 1.8rem;
+    font-weight: 400;
+    font-style: italic;
+    color: #e8e4dc;
+    letter-spacing: -0.02em;
+  }
+
+  header p {
+    font-size: 0.7rem;
+    color: #555;
+    margin-top: 0.3rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .layout {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    height: calc(100vh - 80px);
+  }
+
+  #canvas-container {
+    position: relative;
+    border-right: 1px solid #1e1e24;
+  }
+
+  #canvas-container canvas {
+    display: block;
+  }
+
+  .panel {
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    background: #0a0a0c;
+  }
+
+  .section {
+    padding: 1.4rem 1.6rem;
+    border-bottom: 1px solid #1a1a20;
+  }
+
+  .section-label {
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: #444;
+    margin-bottom: 1rem;
+  }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    gap: 0;
+    margin-bottom: 0;
+    border-bottom: 1px solid #1a1a20;
+  }
+
+  .tab {
+    flex: 1;
+    padding: 0.8rem 0.5rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #444;
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+  }
+
+  .tab.active {
+    color: #e8e4dc;
+    border-bottom-color: #7eb8a4;
+  }
+
+  .tab:hover:not(.active) { color: #888; }
+
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* Matrix display */
+  .matrix-display {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin: 1rem 0;
+    font-size: 1.1rem;
+  }
+
+  .matrix-bracket {
+    font-size: 2.5rem;
+    color: #7eb8a4;
+    font-weight: 100;
+    line-height: 1;
+  }
+
+  .matrix-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.4rem 1rem;
+    text-align: center;
+  }
+
+  .matrix-cell {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #e8e4dc;
+    min-width: 2rem;
+  }
+
+  .matrix-cell.ihat { color: #e05c5c; }
+  .matrix-cell.jhat { color: #5c9be0; }
+
+  /* Sliders */
+  .slider-group {
+    margin-bottom: 1rem;
+  }
+
+  .slider-label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.4rem;
+  }
+
+  .slider-name {
+    font-size: 0.65rem;
+    letter-spacing: 0.05em;
+  }
+
+  .slider-name.ihat { color: #e05c5c; }
+  .slider-name.jhat { color: #5c9be0; }
+
+  .slider-value {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #7eb8a4;
+    min-width: 2rem;
+    text-align: right;
+  }
+
+  input[type="range"] {
+    width: 100%;
+    height: 2px;
+    -webkit-appearance: none;
+    background: #1e1e24;
+    border-radius: 1px;
+    outline: none;
+  }
+
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: transform 0.1s;
+  }
+
+  input[type="range"]::-webkit-slider-thumb:hover {
+    transform: scale(1.3);
+  }
+
+  .ihat-slider::-webkit-slider-thumb { background: #e05c5c; }
+  .jhat-slider::-webkit-slider-thumb { background: #5c9be0; }
+
+  /* Info box */
+  .info-box {
+    background: #111116;
+    border: 1px solid #1e1e24;
+    border-radius: 4px;
+    padding: 1rem;
+    margin-top: 0.8rem;
+  }
+
+  .info-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.68rem;
+    margin-bottom: 0.5rem;
+    color: #888;
+  }
+
+  .info-row:last-child { margin-bottom: 0; }
+
+  .info-row span:last-child {
+    color: #e8e4dc;
+    font-weight: 600;
+  }
+
+  .info-row span:last-child.warn { color: #e0a45c; }
+  .info-row span:last-child.danger { color: #e05c5c; }
+  .info-row span:last-child.good { color: #7eb8a4; }
+
+  /* Point input */
+  .point-input {
+    display: flex;
+    gap: 0.6rem;
+    align-items: center;
+    margin-bottom: 0.8rem;
+  }
+
+  .point-input label {
+    font-size: 0.65rem;
+    color: #888;
+    white-space: nowrap;
+  }
+
+  .coord-input {
+    flex: 1;
+    background: #111116;
+    border: 1px solid #1e1e24;
+    color: #e8e4dc;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
+    padding: 0.4rem 0.6rem;
+    border-radius: 3px;
+    outline: none;
+    transition: border-color 0.2s;
+    width: 60px;
+    text-align: center;
+  }
+
+  .coord-input:focus { border-color: #7eb8a4; }
+
+  /* Buttons */
+  .btn-row {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-top: 0.8rem;
+  }
+
+  .btn {
+    flex: 1;
+    padding: 0.5rem 0.6rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    border: 1px solid #1e1e24;
+    background: #111116;
+    color: #888;
+    cursor: pointer;
+    border-radius: 3px;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+
+  .btn:hover { color: #e8e4dc; border-color: #333; background: #161618; }
+  .btn.active-preset { border-color: #7eb8a4; color: #7eb8a4; }
+
+  /* Explainer */
+  .explainer {
+    font-size: 0.68rem;
+    line-height: 1.7;
+    color: #666;
+    margin-top: 0.8rem;
+  }
+
+  .explainer strong { color: #aaa; font-weight: 600; }
+
+  .highlight-box {
+    background: #0f1a17;
+    border-left: 2px solid #7eb8a4;
+    padding: 0.7rem 0.9rem;
+    margin-top: 0.8rem;
+    font-size: 0.68rem;
+    line-height: 1.7;
+    color: #7eb8a4;
+  }
+
+  /* Legend */
+  .legend {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 0.8rem;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 0.65rem;
+    color: #666;
+  }
+
+  .legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .legend-line {
+    width: 20px;
+    height: 2px;
+    flex-shrink: 0;
+  }
+
+  /* Equation display */
+  .equation {
+    font-size: 0.75rem;
+    color: #7eb8a4;
+    text-align: center;
+    margin: 0.8rem 0;
+    padding: 0.6rem;
+    background: #0f1a17;
+    border-radius: 3px;
+    line-height: 1.8;
+  }
+
+  /* Determinant bar */
+  .det-bar-container {
+    margin-top: 0.8rem;
+  }
+
+  .det-bar-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.62rem;
+    color: #555;
+    margin-bottom: 0.4rem;
+  }
+
+  .det-bar-track {
+    height: 4px;
+    background: #1e1e24;
+    border-radius: 2px;
+    position: relative;
+    overflow: visible;
+  }
+
+  .det-bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.1s, background 0.1s;
+    position: absolute;
+  }
+
+  .det-center-mark {
+    position: absolute;
+    left: 50%;
+    top: -3px;
+    width: 1px;
+    height: 10px;
+    background: #333;
+  }
+
+  @media (max-width: 700px) {
+    .layout { grid-template-columns: 1fr; grid-template-rows: 50vh 1fr; }
+    #canvas-container { border-right: none; border-bottom: 1px solid #1e1e24; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Linear Algebra — Visual Intuition</h1>
+  <p>Interactive transformations · basis vectors · determinants</p>
+</header>
+
+<div class="layout">
+  <div id="canvas-container"></div>
+
+  <div class="panel">
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('transform')">Transform</button>
+      <button class="tab" onclick="switchTab('point')">Point</button>
+      <button class="tab" onclick="switchTab('about')">About</button>
+    </div>
+
+    <!-- TRANSFORM TAB -->
+    <div id="tab-transform" class="tab-content active">
+
+      <div class="section">
+        <div class="section-label">Matrix — movement rules</div>
+
+        <div class="matrix-display">
+          <span class="matrix-bracket">[</span>
+          <div class="matrix-grid">
+            <span class="matrix-cell ihat" id="m00">1</span>
+            <span class="matrix-cell jhat" id="m01">0</span>
+            <span class="matrix-cell ihat" id="m10">0</span>
+            <span class="matrix-cell jhat" id="m11">1</span>
+          </div>
+          <span class="matrix-bracket">]</span>
+        </div>
+
+        <div class="slider-group">
+          <div class="slider-label">
+            <span class="slider-name ihat">î x</span>
+            <span class="slider-value" id="v-ix">1</span>
+          </div>
+          <input type="range" class="ihat-slider" id="ix" min="-3" max="3" step="0.1" value="1" oninput="updateMatrix()">
+        </div>
+
+        <div class="slider-group">
+          <div class="slider-label">
+            <span class="slider-name ihat">î y</span>
+            <span class="slider-value" id="v-iy">0</span>
+          </div>
+          <input type="range" class="ihat-slider" id="iy" min="-3" max="3" step="0.1" value="0" oninput="updateMatrix()">
+        </div>
+
+        <div class="slider-group">
+          <div class="slider-label">
+            <span class="slider-name jhat">ĵ x</span>
+            <span class="slider-value" id="v-jx">0</span>
+          </div>
+          <input type="range" class="jhat-slider" id="jx" min="-3" max="3" step="0.1" value="0" oninput="updateMatrix()">
+        </div>
+
+        <div class="slider-group">
+          <div class="slider-label">
+            <span class="slider-name jhat">ĵ y</span>
+            <span class="slider-value" id="v-jy">1</span>
+          </div>
+          <input type="range" class="jhat-slider" id="jy" min="-3" max="3" step="0.1" value="1" oninput="updateMatrix()">
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-label">Presets</div>
+        <div class="btn-row">
+          <button class="btn active-preset" id="btn-identity" onclick="setPreset('identity')">Identity</button>
+          <button class="btn" id="btn-stretch" onclick="setPreset('stretch')">Stretch</button>
+          <button class="btn" id="btn-rotate" onclick="setPreset('rotate90')">Rotate 90°</button>
+        </div>
+        <div class="btn-row">
+          <button class="btn" id="btn-shear" onclick="setPreset('shear')">Shear</button>
+          <button class="btn" id="btn-reflect" onclick="setPreset('reflect')">Reflect</button>
+          <button class="btn" id="btn-collapse" onclick="setPreset('collapse')">Collapse</button>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-label">Diagnostics</div>
+        <div class="info-box">
+          <div class="info-row">
+            <span>Determinant</span>
+            <span id="det-value" class="good">1.00</span>
+          </div>
+          <div class="info-row">
+            <span>Area scaling</span>
+            <span id="area-scale" class="good">×1.00</span>
+          </div>
+          <div class="info-row">
+            <span>Orientation</span>
+            <span id="orientation" class="good">Preserved</span>
+          </div>
+          <div class="info-row">
+            <span>Invertible?</span>
+            <span id="invertible" class="good">Yes</span>
+          </div>
+        </div>
+
+        <div class="det-bar-container">
+          <div class="det-bar-label">
+            <span>−9</span>
+            <span>det = 0</span>
+            <span>+9</span>
+          </div>
+          <div class="det-bar-track">
+            <div class="det-center-mark"></div>
+            <div class="det-bar-fill" id="det-bar" style="left:50%;width:0%;background:#7eb8a4"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="legend">
+          <div class="legend-item">
+            <div class="legend-line" style="background:#e05c5c"></div>
+            <span>î — horizontal movement rule</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-line" style="background:#5c9be0"></div>
+            <span>ĵ — vertical movement rule</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-line" style="background:#333;border-top:1px dashed #555"></div>
+            <span>Original grid (ghost)</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-line" style="background:#7eb8a4;opacity:0.6"></div>
+            <span>Transformed grid</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- POINT TAB -->
+    <div id="tab-point" class="tab-content">
+      <div class="section">
+        <div class="section-label">Track a point</div>
+
+        <div class="point-input">
+          <label>Point (x, y)</label>
+          <input type="number" class="coord-input" id="px" value="2" step="0.5" oninput="updatePoint()">
+          <input type="number" class="coord-input" id="py" value="1" step="0.5" oninput="updatePoint()">
+        </div>
+
+        <div class="equation" id="point-equation">
+          2×î + 1×ĵ = (2, 1)
+        </div>
+
+        <div class="info-box">
+          <div class="info-row">
+            <span>Original point</span>
+            <span id="orig-point">(2, 1)</span>
+          </div>
+          <div class="info-row">
+            <span>After transform</span>
+            <span id="trans-point" class="good">(2, 1)</span>
+          </div>
+        </div>
+
+        <div class="highlight-box" id="point-explainer">
+          Move the sliders in the Transform tab to see this point travel with the transformation.
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="explainer">
+          <strong>What you're seeing:</strong><br><br>
+          The white dot is your original point. The green dot is where it lands after the transformation.<br><br>
+          The travel instructions stay the same — it's always <strong>x steps of î + y steps of ĵ</strong>. But when you change the movement rules, the destination changes.
+        </div>
+      </div>
+    </div>
+
+    <!-- ABOUT TAB -->
+    <div id="tab-about" class="tab-content">
+      <div class="section">
+        <div class="section-label">The big ideas</div>
+        <div class="explainer">
+          <strong>A matrix = movement rules.</strong><br>
+          The columns tell you where î and ĵ land. Every point follows automatically.<br><br>
+
+          <strong>Transformation = swap the rules.</strong><br>
+          When you move the sliders, you're changing where î and ĵ go. The whole plane deforms with them.<br><br>
+
+          <strong>Determinant = area scaling.</strong><br>
+          Watch how the green grid squares change size. The determinant measures exactly how much. Zero means space collapsed — no inverse exists.<br><br>
+
+          <strong>Negative det = space flipped.</strong><br>
+          When det goes negative, î and ĵ swap sides. The orientation reverses — like turning the chessboard over.<br><br>
+
+          <strong>Identity = do nothing.</strong><br>
+          î stays at (1,0), ĵ stays at (0,1). Every point stays put. This is what A⁻¹A gives you.
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-label">Try this</div>
+        <div class="explainer">
+          1. Hit <strong>Collapse</strong> — watch the grid squish to a line. Det = 0. No inverse.<br><br>
+          2. Hit <strong>Rotate 90°</strong> — grid spins. Det stays 1. Area preserved.<br><br>
+          3. Hit <strong>Reflect</strong> — det goes negative. Orientation flips.<br><br>
+          4. Drag sliders slowly and watch the determinant bar move in real time.
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ─── State ───────────────────────────────────────────────────────────────────
+let matrix = { ix: 1, iy: 0, jx: 0, jy: 1 };
+let point = { x: 2, y: 1 };
+let animT = 0;
+let targetMatrix = { ix: 1, iy: 0, jx: 0, jy: 1 };
+let animating = false;
+
+// ─── UI Logic ────────────────────────────────────────────────────────────────
+function updateMatrix() {
+  matrix.ix = parseFloat(document.getElementById('ix').value);
+  matrix.iy = parseFloat(document.getElementById('iy').value);
+  matrix.jx = parseFloat(document.getElementById('jx').value);
+  matrix.jy = parseFloat(document.getElementById('jy').value);
+
+  // Update display values
+  document.getElementById('v-ix').textContent = matrix.ix.toFixed(1);
+  document.getElementById('v-iy').textContent = matrix.iy.toFixed(1);
+  document.getElementById('v-jx').textContent = matrix.jx.toFixed(1);
+  document.getElementById('v-jy').textContent = matrix.jy.toFixed(1);
+
+  // Matrix cells
+  document.getElementById('m00').textContent = matrix.ix.toFixed(1);
+  document.getElementById('m10').textContent = matrix.iy.toFixed(1);
+  document.getElementById('m01').textContent = matrix.jx.toFixed(1);
+  document.getElementById('m11').textContent = matrix.jy.toFixed(1);
+
+  // Diagnostics
+  const det = matrix.ix * matrix.jy - matrix.jx * matrix.iy;
+  const detEl = document.getElementById('det-value');
+  const areaEl = document.getElementById('area-scale');
+  const orientEl = document.getElementById('orientation');
+  const invEl = document.getElementById('invertible');
+
+  detEl.textContent = det.toFixed(2);
+  areaEl.textContent = '×' + Math.abs(det).toFixed(2);
+
+  const eps = 0.01;
+  if (Math.abs(det) < eps) {
+    detEl.className = 'danger';
+    areaEl.className = 'danger';
+    invEl.textContent = 'No';
+    invEl.className = 'danger';
+    orientEl.textContent = 'Collapsed';
+    orientEl.className = 'danger';
+  } else if (det < 0) {
+    detEl.className = 'warn';
+    areaEl.className = 'warn';
+    invEl.textContent = 'Yes';
+    invEl.className = 'good';
+    orientEl.textContent = 'Flipped';
+    orientEl.className = 'warn';
+  } else {
+    detEl.className = 'good';
+    areaEl.className = 'good';
+    invEl.textContent = 'Yes';
+    invEl.className = 'good';
+    orientEl.textContent = 'Preserved';
+    orientEl.className = 'good';
+  }
+
+  // Det bar
+  const bar = document.getElementById('det-bar');
+  const pct = Math.min(Math.max(det / 9, -1), 1);
+  if (pct >= 0) {
+    bar.style.left = '50%';
+    bar.style.width = (pct * 50) + '%';
+    bar.style.background = Math.abs(det) < eps ? '#e05c5c' : '#7eb8a4';
+  } else {
+    bar.style.left = (50 + pct * 50) + '%';
+    bar.style.width = (-pct * 50) + '%';
+    bar.style.background = '#e0a45c';
+  }
+
+  updatePoint();
+  updatePresetHighlight();
+}
+
+function updatePoint() {
+  const px = parseFloat(document.getElementById('px').value) || 0;
+  const py = parseFloat(document.getElementById('py').value) || 0;
+  point = { x: px, y: py };
+
+  const tx = px * matrix.ix + py * matrix.jx;
+  const ty = px * matrix.iy + py * matrix.jy;
+
+  document.getElementById('orig-point').textContent = `(${px}, ${py})`;
+  document.getElementById('trans-point').textContent = `(${tx.toFixed(2)}, ${ty.toFixed(2)})`;
+
+  const ixS = matrix.ix.toFixed(1);
+  const iyS = matrix.iy.toFixed(1);
+  const jxS = matrix.jx.toFixed(1);
+  const jyS = matrix.jy.toFixed(1);
+
+  document.getElementById('point-equation').innerHTML =
+    `${px}×(${ixS},${iyS}) + ${py}×(${jxS},${jyS})<br>= (${tx.toFixed(2)}, ${ty.toFixed(2)})`;
+
+  document.getElementById('point-explainer').textContent =
+    `Travel instructions: ${px} steps of î, ${py} steps of ĵ. ` +
+    `Under this transformation, you land at (${tx.toFixed(2)}, ${ty.toFixed(2)}).`;
+}
+
+const presets = {
+  identity: { ix:1, iy:0, jx:0, jy:1 },
+  stretch:  { ix:2, iy:0, jx:0, jy:1.5 },
+  rotate90: { ix:0, iy:1, jx:-1, jy:0 },
+  shear:    { ix:1, iy:0, jx:1, jy:1 },
+  reflect:  { ix:1, iy:0, jx:0, jy:-1 },
+  collapse: { ix:1, iy:0.5, jx:2, jy:1 },
+};
+
+function setPreset(name) {
+  const p = presets[name];
+  document.getElementById('ix').value = p.ix;
+  document.getElementById('iy').value = p.iy;
+  document.getElementById('jx').value = p.jx;
+  document.getElementById('jy').value = p.jy;
+  updateMatrix();
+}
+
+function updatePresetHighlight() {
+  Object.keys(presets).forEach(name => {
+    const p = presets[name];
+    const btn = document.getElementById('btn-' + name);
+    if (!btn) return;
+    const match = Math.abs(p.ix - matrix.ix) < 0.05 &&
+                  Math.abs(p.iy - matrix.iy) < 0.05 &&
+                  Math.abs(p.jx - matrix.jx) < 0.05 &&
+                  Math.abs(p.jy - matrix.jy) < 0.05;
+    btn.classList.toggle('active-preset', match);
+  });
+}
+
+function switchTab(name) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  event.target.classList.add('active');
+}
+
+// ─── p5.js Sketch ─────────────────────────────────────────────────────────────
+new p5(function(p) {
+  let W, H, cx, cy, scale;
+
+  p.setup = function() {
+    const container = document.getElementById('canvas-container');
+    W = container.offsetWidth;
+    H = container.offsetHeight;
+    const cnv = p.createCanvas(W, H);
+    cnv.parent('canvas-container');
+    cx = W / 2;
+    cy = H / 2;
+    scale = Math.min(W, H) / 10;
+    p.textFont('JetBrains Mono');
+  };
+
+  p.windowResized = function() {
+    const container = document.getElementById('canvas-container');
+    W = container.offsetWidth;
+    H = container.offsetHeight;
+    p.resizeCanvas(W, H);
+    cx = W / 2;
+    cy = H / 2;
+    scale = Math.min(W, H) / 10;
+  };
+
+  // Transform world coords to screen
+  function tx(x, y) {
+    return cx + x * scale;
+  }
+  function ty(x, y) {
+    return cy - y * scale;
+  }
+
+  // Apply matrix transform to a world point
+  function applyMatrix(x, y) {
+    return {
+      x: x * matrix.ix + y * matrix.jx,
+      y: x * matrix.iy + y * matrix.jy
+    };
+  }
+
+  function drawGrid() {
+    const range = 6;
+
+    // Ghost grid (original)
+    p.stroke(40, 40, 50);
+    p.strokeWeight(0.5);
+    for (let i = -range; i <= range; i++) {
+      p.line(tx(i, -range), ty(i, -range), tx(i, range), ty(i, range));
+      p.line(tx(-range, i), ty(-range, i), tx(range, i), ty(range, i));
+    }
+
+    // Transformed grid
+    p.strokeWeight(0.8);
+    for (let i = -range; i <= range; i++) {
+      // Lines parallel to î
+      const a = applyMatrix(i, -range);
+      const b = applyMatrix(i, range);
+      p.stroke(126, 184, 164, 35);
+      p.line(tx(a.x), ty(a.y), tx(b.x), ty(b.y));
+
+      // Lines parallel to ĵ
+      const c = applyMatrix(-range, i);
+      const d = applyMatrix(range, i);
+      p.stroke(126, 184, 164, 35);
+      p.line(tx(c.x), ty(c.y), tx(d.x), ty(d.y));
+    }
+
+    // Transformed axes
+    const axRange = range;
+    const ai = applyMatrix(axRange, 0);
+    const aj = applyMatrix(0, axRange);
+    const ain = applyMatrix(-axRange, 0);
+    const ajn = applyMatrix(0, -axRange);
+
+    p.stroke(126, 184, 164, 80);
+    p.strokeWeight(1);
+    p.line(tx(ain.x), ty(ain.y), tx(ai.x), ty(ai.y));
+    p.line(tx(ajn.x), ty(ajn.y), tx(aj.x), ty(aj.y));
+  }
+
+  function drawBasisVectors() {
+    // î vector
+    p.stroke(224, 92, 92);
+    p.strokeWeight(2.5);
+    p.fill(224, 92, 92);
+    drawArrow(0, 0, matrix.ix, matrix.iy, [224, 92, 92]);
+
+    // ĵ vector
+    drawArrow(0, 0, matrix.jx, matrix.jy, [92, 155, 224]);
+
+    // Labels
+    p.noStroke();
+    p.textSize(12);
+
+    p.fill(224, 92, 92);
+    const iLabelX = tx(matrix.ix * 1.15);
+    const iLabelY = ty(matrix.iy * 1.15);
+    p.text('î', iLabelX, iLabelY);
+
+    p.fill(92, 155, 224);
+    const jLabelX = tx(matrix.jx * 1.15);
+    const jLabelY = ty(matrix.jy * 1.15);
+    p.text('ĵ', jLabelX, jLabelY);
+  }
+
+  function drawArrow(x1, y1, x2, y2, col) {
+    p.stroke(...col);
+    p.strokeWeight(2.5);
+    p.line(tx(x1), ty(y1), tx(x2), ty(y2));
+
+    // Arrowhead
+    const angle = Math.atan2(-(y2 - y1), x2 - x1);
+    const headLen = 10;
+    const sx = tx(x2), sy = ty(y2);
+    p.fill(...col);
+    p.noStroke();
+    p.beginShape();
+    p.vertex(sx, sy);
+    p.vertex(sx - headLen * Math.cos(angle - 0.4), sy - headLen * Math.sin(angle - 0.4));
+    p.vertex(sx - headLen * Math.cos(angle + 0.4), sy - headLen * Math.sin(angle + 0.4));
+    p.endShape(p.CLOSE);
+  }
+
+  function drawPoint() {
+    const px = point.x, py = point.y;
+    const tp = applyMatrix(px, py);
+
+    // Line from original to transformed
+    p.stroke(126, 184, 164, 60);
+    p.strokeWeight(1);
+    p.setLineDash && p.setLineDash([4, 4]);
+    p.line(tx(px), ty(py), tx(tp.x), ty(tp.y));
+
+    // Original point
+    p.noStroke();
+    p.fill(255, 255, 255, 180);
+    p.circle(tx(px), ty(py), 8);
+
+    // Transformed point
+    p.fill(126, 184, 164);
+    p.circle(tx(tp.x), ty(tp.y), 10);
+
+    // Labels
+    p.textSize(10);
+    p.fill(255, 255, 255, 160);
+    p.noStroke();
+    p.text(`(${px}, ${py})`, tx(px) + 8, ty(py) - 6);
+
+    if (Math.abs(tp.x - px) > 0.05 || Math.abs(tp.y - py) > 0.05) {
+      p.fill(126, 184, 164, 200);
+      p.text(`(${tp.x.toFixed(1)}, ${tp.y.toFixed(1)})`, tx(tp.x) + 8, ty(tp.y) - 6);
+    }
+  }
+
+  function drawOriginDot() {
+    p.noStroke();
+    p.fill(126, 184, 164, 120);
+    p.circle(cx, cy, 6);
+  }
+
+  function drawDeterminantSquare() {
+    const det = matrix.ix * matrix.jy - matrix.jx * matrix.iy;
+    const a = applyMatrix(0, 0);
+    const b = applyMatrix(1, 0);
+    const c = applyMatrix(1, 1);
+    const d = applyMatrix(0, 1);
+
+    const alpha = Math.min(Math.abs(det) * 40 + 15, 60);
+    if (det >= 0) {
+      p.fill(126, 184, 164, alpha);
+    } else {
+      p.fill(224, 164, 92, alpha);
+    }
+    p.noStroke();
+    p.beginShape();
+    p.vertex(tx(a.x), ty(a.y));
+    p.vertex(tx(b.x), ty(b.y));
+    p.vertex(tx(c.x), ty(c.y));
+    p.vertex(tx(d.x), ty(d.y));
+    p.endShape(p.CLOSE);
+
+    // Det label inside
+    p.textSize(10);
+    p.fill(126, 184, 164, 160);
+    p.noStroke();
+    const midX = (a.x + b.x + c.x + d.x) / 4;
+    const midY = (a.y + b.y + c.y + d.y) / 4;
+    p.text(`det=${det.toFixed(1)}`, tx(midX) - 18, ty(midY));
+  }
+
+  p.draw = function() {
+    p.background(13, 13, 15);
+    drawGrid();
+    drawDeterminantSquare();
+    drawBasisVectors();
+    drawPoint();
+    drawOriginDot();
+  };
+}, document.body);
+
+// Init
+updateMatrix();
+updatePoint();
+</script>
+</body>
+</html>
