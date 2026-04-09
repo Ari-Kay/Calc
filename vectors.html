@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vectors — Visual Intuition</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:       #0e0f0c;
+    --surface:  #131410;
+    --border:   #1e1f1a;
+    --text:     #ddd8cc;
+    --muted:    #555550;
+    --faint:    #252520;
+    --green:    #a8c87a;
+    --red:      #d97060;
+    --blue:     #6da8c8;
+    --gold:     #c8a86d;
+    --white:    #f0ece0;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.6;
+  }
+
+  /* ── NAV ── */
+  nav {
+    padding: 1rem 2rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+  }
+
+  nav a {
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+
+  nav a:hover { color: var(--text); }
+  nav a.current { color: var(--green); }
+  nav .sep { color: var(--border); }
+
+  /* ── HERO ── */
+  .hero {
+    padding: 4rem 2rem 2rem;
+    max-width: 820px;
+    margin: 0 auto;
+  }
+
+  .hero-label {
+    font-size: 0.6rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 1rem;
+  }
+
+  .hero h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(2.5rem, 6vw, 4rem);
+    font-weight: 400;
+    font-style: italic;
+    color: var(--white);
+    line-height: 1.1;
+    margin-bottom: 1.5rem;
+    letter-spacing: -0.02em;
+  }
+
+  .hero-body {
+    font-size: 0.85rem;
+    color: #888880;
+    max-width: 560px;
+    line-height: 1.9;
+  }
+
+  /* ── SECTION ── */
+  .section {
+    max-width: 820px;
+    margin: 0 auto;
+    padding: 3rem 2rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .section-tag {
+    font-size: 0.58rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 1.2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+  }
+
+  .section-tag::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  h2 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.8rem;
+    font-weight: 600;
+    color: var(--white);
+    margin-bottom: 1rem;
+    line-height: 1.2;
+  }
+
+  p {
+    color: #888880;
+    font-size: 0.82rem;
+    line-height: 1.95;
+    margin-bottom: 1rem;
+    max-width: 580px;
+  }
+
+  p strong { color: var(--text); font-weight: 600; }
+  p em { color: var(--gold); font-style: italic; }
+
+  /* ── CALLOUT ── */
+  .callout {
+    border-left: 2px solid var(--green);
+    background: #141a0e;
+    padding: 1rem 1.2rem;
+    margin: 1.5rem 0;
+    font-size: 0.8rem;
+    color: #8aaa60;
+    line-height: 1.8;
+    max-width: 580px;
+  }
+
+  .callout strong { color: var(--green); }
+
+  /* ── DEFINITION ── */
+  .definition {
+    border: 1px solid var(--border);
+    background: var(--surface);
+    padding: 1.2rem 1.4rem;
+    margin: 1.5rem 0;
+    max-width: 580px;
+  }
+
+  .definition-label {
+    font-size: 0.58rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 0.6rem;
+  }
+
+  .definition-body {
+    font-size: 0.8rem;
+    color: var(--text);
+    line-height: 1.8;
+  }
+
+  .definition-body .math {
+    color: var(--gold);
+    font-weight: 600;
+  }
+
+  /* ── VIZ CONTAINER ── */
+  .viz-wrapper {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+    margin: 2rem 0;
+  }
+
+  .viz-header {
+    padding: 0.8rem 1.2rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .viz-title {
+    font-size: 0.62rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .viz-body {
+    display: flex;
+    min-height: 420px;
+  }
+
+  #ball-canvas {
+    flex: 1;
+    min-width: 0;
+  }
+
+  #ball-canvas canvas { display: block; }
+
+  .viz-controls {
+    width: 220px;
+    flex-shrink: 0;
+    border-left: 1px solid var(--border);
+    padding: 1.2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+  }
+
+  .ctrl-group {}
+
+  .ctrl-label {
+    font-size: 0.58rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 0.7rem;
+  }
+
+  .ctrl-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.4rem;
+  }
+
+  .ctrl-name {
+    font-size: 0.65rem;
+    color: #666;
+  }
+
+  .ctrl-val {
+    font-size: 0.72rem;
+    font-weight: 600;
+    min-width: 3rem;
+    text-align: right;
+  }
+
+  .ctrl-val.green { color: var(--green); }
+  .ctrl-val.red   { color: var(--red);   }
+  .ctrl-val.blue  { color: var(--blue);  }
+  .ctrl-val.gold  { color: var(--gold);  }
+
+  input[type="range"] {
+    width: 100%; height: 2px;
+    -webkit-appearance: none;
+    background: var(--faint);
+    border-radius: 1px; outline: none;
+    margin-bottom: 0.6rem;
+  }
+
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 12px; height: 12px;
+    border-radius: 50%; cursor: pointer;
+    transition: transform 0.1s;
+  }
+
+  input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.3); }
+  .slider-green::-webkit-slider-thumb { background: var(--green); }
+  .slider-blue::-webkit-slider-thumb  { background: var(--blue);  }
+
+  .btn-kick {
+    width: 100%;
+    padding: 0.6rem;
+    background: #1a2010;
+    border: 1px solid #2a3818;
+    color: var(--green);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    border-radius: 2px;
+    transition: all 0.15s;
+  }
+
+  .btn-kick:hover { background: #202a14; border-color: var(--green); }
+  .btn-kick:active { transform: scale(0.98); }
+
+  .component-box {
+    background: var(--faint);
+    border-radius: 2px;
+    padding: 0.7rem;
+  }
+
+  .comp-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.68rem;
+    margin-bottom: 0.35rem;
+    align-items: center;
+  }
+
+  .comp-row:last-child { margin-bottom: 0; }
+
+  .comp-label { color: var(--muted); }
+  .comp-eq { font-weight: 600; }
+
+  .dot-red  { display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--red);  margin-right:5px; }
+  .dot-blue { display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--blue); margin-right:5px; }
+  .dot-gold { display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--gold); margin-right:50px; }
+
+  /* ── INSIGHT ── */
+  .insight-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin: 1.5rem 0;
+    max-width: 580px;
+  }
+
+  .insight-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 1rem;
+  }
+
+  .insight-card .ic-label {
+    font-size: 0.58rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 0.5rem;
+  }
+
+  .insight-card .ic-body {
+    font-size: 0.72rem;
+    color: #777770;
+    line-height: 1.7;
+  }
+
+  .insight-card .ic-body strong { color: var(--text); }
+
+  /* ── FOOTER ── */
+  .page-footer {
+    max-width: 820px;
+    margin: 0 auto;
+    padding: 2rem;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .page-footer span { font-size: 0.62rem; color: var(--muted); }
+
+  .next-link {
+    font-size: 0.65rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--green);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: gap 0.2s;
+  }
+
+  .next-link:hover { gap: 0.8rem; }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html">Home</a>
+  <span class="sep">/</span>
+  <a href="#" class="current">Vectors</a>
+  <span class="sep">/</span>
+  <a href="linear-algebra.html" style="opacity:0.4;pointer-events:none">Matrices</a>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-label">Chapter 01 — Vectors</div>
+  <h1>You already know<br>what a vector is.</h1>
+  <p class="hero-body">
+    You've felt one. The moment you kick a ball, push a box, or feel wind on your face — that force has a direction and a strength. That's a vector. Mathematics just gave it a name.
+  </p>
+</div>
+
+<!-- SECTION 1: Physical intuition -->
+<div class="section">
+  <div class="section-tag">Physical intuition</div>
+  <h2>A force has direction</h2>
+
+  <p>
+    Push a box straight right — it slides right. Push it straight up — it lifts. But push it at an angle, and something interesting happens: it moves <strong>both right and up simultaneously.</strong>
+  </p>
+
+  <p>
+    The box doesn't care about your angle. It responds to two independent questions: <em>how much horizontal force?</em> and <em>how much vertical force?</em> Your diagonal push is secretly two separate pushes happening at the same time.
+  </p>
+
+  <div class="callout">
+    <strong>The key insight:</strong> Any vector — any force, velocity, or displacement — can be split into independent components. One for each dimension. The diagonal movement is just both happening simultaneously.
+  </div>
+
+  <p>
+    This splitting is called <strong>resolving a vector.</strong> And it's the most important thing you can do with one.
+  </p>
+</div>
+
+<!-- VIZ -->
+<div style="max-width:820px;margin:0 auto;padding:0 2rem 3rem;">
+  <div class="viz-wrapper">
+    <div class="viz-header">
+      <span class="viz-title">Vector decomposition — kick the ball</span>
+      <span style="font-size:0.6rem;color:var(--muted)">adjust angle & speed, then kick</span>
+    </div>
+    <div class="viz-body">
+      <div id="ball-canvas"></div>
+      <div class="viz-controls">
+
+        <div class="ctrl-group">
+          <div class="ctrl-label">Kick parameters</div>
+          <div class="ctrl-row">
+            <span class="ctrl-name">angle</span>
+            <span class="ctrl-val gold" id="disp-angle">35°</span>
+          </div>
+          <input type="range" class="slider-green" id="sl-angle" min="5" max="85" step="1" value="35" oninput="syncControls()">
+          <div class="ctrl-row">
+            <span class="ctrl-name">speed</span>
+            <span class="ctrl-val gold" id="disp-speed">6.0</span>
+          </div>
+          <input type="range" class="slider-blue" id="sl-speed" min="2" max="10" step="0.5" value="6" oninput="syncControls()">
+        </div>
+
+        <button class="btn-kick" onclick="kick()">⚽ Kick</button>
+
+        <div class="ctrl-group">
+          <div class="ctrl-label">Live components</div>
+          <div class="component-box">
+            <div class="comp-row">
+              <span class="comp-label"><span class="dot-gold"></span>Total</span>
+              <span class="comp-eq gold" id="comp-total">6.0</span>
+            </div>
+            <div class="comp-row">
+              <span class="comp-label"><span class="dot-red"></span>î  (horiz)</span>
+              <span class="comp-eq red" id="comp-ix">4.91</span>
+            </div>
+            <div class="comp-row">
+              <span class="comp-label"><span class="dot-blue"></span>ĵ  (vert)</span>
+              <span class="comp-eq blue" id="comp-jy">3.44</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="ctrl-group">
+          <div class="ctrl-label">Equation</div>
+          <div style="background:var(--faint);padding:0.7rem;border-radius:2px;font-size:0.65rem;line-height:1.9;color:var(--muted)">
+            <span style="color:var(--gold)" id="eq-speed">6.0</span> × (cos <span id="eq-angle">35°</span>)<br>
+            = <span style="color:var(--red)" id="eq-ix">4.91</span> î<br><br>
+            <span style="color:var(--gold)" id="eq-speed2">6.0</span> × (sin <span id="eq-angle2">35°</span>)<br>
+            = <span style="color:var(--blue)" id="eq-jy">3.44</span> ĵ
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION 2: Abstraction -->
+<div class="section">
+  <div class="section-tag">The abstraction</div>
+  <h2>So what is a vector?</h2>
+
+  <p>
+    An arrow. That's it. Something with a <strong>direction</strong> and a <strong>magnitude</strong> (length). We write it as two numbers because we're in 2D space — one number per dimension.
+  </p>
+
+  <p>
+    Those two numbers aren't the arrow itself. They're the answer to: <em>how much horizontal, how much vertical?</em> They're the resolved components. The arrow comes first — the numbers are just how we describe it.
+  </p>
+
+  <div class="definition">
+    <div class="definition-label">Formal definition</div>
+    <div class="definition-body">
+      A <strong>vector</strong> is an element of a vector space — an object with magnitude and direction. In 2D, we write it as <span class="math">(x, y)</span> where x and y are its components along the basis vectors î and ĵ.<br><br>
+      Geometrically: an arrow from the origin to the point (x, y).<br>
+      Physically: a quantity that has both size and direction — force, velocity, displacement, field strength.
+    </div>
+  </div>
+</div>
+
+<!-- SECTION 3: Chess / basis -->
+<div class="section">
+  <div class="section-tag">The chess analogy</div>
+  <h2>The numbers depend on the ruler</h2>
+
+  <p>
+    Here's what most courses skip: the numbers (x, y) aren't absolute. They're <strong>travel instructions</strong> — how many steps of î, how many steps of ĵ.
+  </p>
+
+  <p>
+    Change î and ĵ — use a different basis, a differently shaped grid — and the same physical arrow gets <em>completely different numbers.</em> The force didn't change. The ruler did.
+  </p>
+
+  <p>
+    Think of it like chess. A knight moves in an L. A bishop moves diagonally. Give both the same instruction — "go to square (3,2)" — and they end up in completely different places, because their movement rules are different. The coordinate is always <em>relative to the movement rule.</em>
+  </p>
+
+  <div class="insight-grid">
+    <div class="insight-card">
+      <div class="ic-label">Standard basis</div>
+      <div class="ic-body">î = (1,0), ĵ = (0,1)<br>Square grid. The ruler most people assume.</div>
+    </div>
+    <div class="insight-card">
+      <div class="ic-label">Different basis</div>
+      <div class="ic-body">î = (1,1), ĵ = (1,−1)<br>Parallelogram grid. Same plane, different ruler.</div>
+    </div>
+    <div class="insight-card">
+      <div class="ic-label">Same arrow</div>
+      <div class="ic-body">The physical force doesn't change. Only the numbers describing it change.</div>
+    </div>
+    <div class="insight-card">
+      <div class="ic-label">Same Earth</div>
+      <div class="ic-body">Moving the prime meridian doesn't move any country. It just changes every coordinate.</div>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION 4: Summary -->
+<div class="section">
+  <div class="section-tag">Summary</div>
+  <h2>What to remember</h2>
+
+  <p>A vector is an arrow — direction and magnitude. When you write it as (x, y), those numbers are its components: how much of each basis direction. The components depend on your basis. The arrow doesn't.</p>
+
+  <div class="callout">
+    <strong>Resolving a vector</strong> = expressing it in terms of your basis vectors.<br>
+    Same arrow. Different basis. Different numbers. The physics stays the same.
+  </div>
+
+  <p>This is why physicists and engineers live in linear algebra. Every time they resolve a force, decompose a velocity, or break down a field — they're doing exactly this. Expressing one arrow in terms of their chosen movement rules.</p>
+</div>
+
+<div class="page-footer">
+  <span>Chapter 01 — Vectors</span>
+  <a href="linear-algebra.html" class="next-link">Matrices →</a>
+</div>
+
+<script>
+// ── State ─────────────────────────────────────────
+let angle = 35, speed = 6;
+let ballX, ballY, velX, velY;
+let trailX = [], trailY = [];
+let shadowHX, shadowHY, shadowVX, shadowVY;
+let isFlying = false;
+let t = 0;
+let W, H, CX, CY, SCALE;
+const GRAVITY = 0.18;
+
+function syncControls() {
+  angle = parseFloat(document.getElementById('sl-angle').value);
+  speed = parseFloat(document.getElementById('sl-speed').value);
+  const rad = angle * Math.PI / 180;
+  const vx  = speed * Math.cos(rad);
+  const vy  = speed * Math.sin(rad);
+  document.getElementById('disp-angle').textContent = angle + '°';
+  document.getElementById('disp-speed').textContent = speed.toFixed(1);
+  document.getElementById('comp-total').textContent = speed.toFixed(2);
+  document.getElementById('comp-ix').textContent    = vx.toFixed(2);
+  document.getElementById('comp-jy').textContent    = vy.toFixed(2);
+  document.getElementById('eq-speed').textContent   = speed.toFixed(1);
+  document.getElementById('eq-speed2').textContent  = speed.toFixed(1);
+  document.getElementById('eq-angle').textContent   = angle + '°';
+  document.getElementById('eq-angle2').textContent  = angle + '°';
+  document.getElementById('eq-ix').textContent      = vx.toFixed(2);
+  document.getElementById('eq-jy').textContent      = vy.toFixed(2);
+}
+
+function kick() {
+  if (!W) return;
+  const rad = angle * Math.PI / 180;
+  ballX = 1.5;
+  ballY = 0;
+  velX  = speed * Math.cos(rad);
+  velY  = speed * Math.sin(rad);
+  trailX = [ballX]; trailY = [ballY];
+  shadowHX = ballX; shadowHY = ballY;
+  shadowVX = ballX; shadowVY = ballY;
+  isFlying = true;
+  t = 0;
+}
+
+// ── p5 sketch ─────────────────────────────────────
+new p5(function(p) {
+  p.setup = function() {
+    const cont = document.getElementById('ball-canvas');
+    W = cont.offsetWidth  || 500;
+    H = cont.offsetHeight || 420;
+    p.createCanvas(W, H).parent('ball-canvas');
+    CX = W * 0.15;
+    CY = H * 0.75;
+    SCALE = Math.min(W, H) / 9;
+    // initial ball at rest
+    ballX = 1.5; ballY = 0;
+    trailX = [ballX]; trailY = [ballY];
+    shadowHX = ballX; shadowHY = 0;
+    shadowVX = ballX; shadowVY = 0;
+  };
+
+  p.windowResized = function() {
+    const cont = document.getElementById('ball-canvas');
+    W = cont.offsetWidth  || 500;
+    H = cont.offsetHeight || 420;
+    p.resizeCanvas(W, H);
+    CX = W * 0.15; CY = H * 0.75;
+    SCALE = Math.min(W, H) / 9;
+  };
+
+  function wx(worldX) { return CX + worldX * SCALE; }
+  function wy(worldY) { return CY - worldY * SCALE; }
+
+  function drawGrid() {
+    const cols = Math.ceil((W - CX) / SCALE) + 1;
+    const rows = Math.ceil(CY / SCALE) + 1;
+    p.stroke(30, 32, 26); p.strokeWeight(0.5);
+    for (let i = 0; i <= cols; i++) {
+      const x = CX + i * SCALE;
+      p.line(x, 0, x, H);
+    }
+    for (let j = -2; j <= rows; j++) {
+      const y = CY - j * SCALE;
+      p.line(0, y, W, y);
+    }
+    // Ground
+    p.stroke(45, 50, 38); p.strokeWeight(1.5);
+    p.line(0, wy(0), W, wy(0));
+    // Axes labels
+    p.noStroke(); p.fill(60,65,50); p.textSize(9); p.textAlign(p.LEFT, p.TOP);
+    p.text('î', wx(1)-4, wy(0)+6);
+    p.text('ĵ', wx(0)+4, wy(1)-4);
+  }
+
+  function drawAngleGuide() {
+    if (isFlying) return;
+    const rad = angle * Math.PI / 180;
+    const len = speed * 0.5;
+    const ex = 1.5 + len * Math.cos(rad);
+    const ey = len * Math.sin(rad);
+
+    // Full vector (gold)
+    p.stroke(200, 168, 109); p.strokeWeight(2);
+    drawArrow(p, wx(1.5), wy(0), wx(ex), wy(ey), [200,168,109]);
+
+    // H component (red dashed)
+    p.stroke(217, 112, 96, 160); p.strokeWeight(1.5);
+    p.drawingContext.setLineDash([4,4]);
+    p.line(wx(1.5), wy(0), wx(ex), wy(0));
+    p.drawingContext.setLineDash([]);
+
+    // V component (blue dashed)
+    p.stroke(109, 168, 200, 160); p.strokeWeight(1.5);
+    p.drawingContext.setLineDash([4,4]);
+    p.line(wx(ex), wy(0), wx(ex), wy(ey));
+    p.drawingContext.setLineDash([]);
+
+    // Angle arc
+    p.noFill(); p.stroke(200,168,109,80); p.strokeWeight(1);
+    p.arc(wx(1.5), wy(0), 40, 40, -rad, 0);
+
+    // Labels
+    p.noStroke(); p.textSize(10); p.textAlign(p.CENTER, p.BOTTOM);
+    p.fill(217,112,96,200);
+    p.text(speed * Math.cos(rad * 1) > 0.1 ? (speed*Math.cos(rad)).toFixed(1)+'î' : '', wx(1.5 + (ex-1.5)/2), wy(0)-4);
+    p.textAlign(p.LEFT, p.CENTER);
+    p.fill(109,168,200,200);
+    p.text(ey>0.1 ? (speed*Math.sin(rad)).toFixed(1)+'ĵ' : '', wx(ex)+5, wy(ey/2));
+    p.fill(200,168,109,200); p.textAlign(p.CENTER, p.CENTER);
+    p.text(angle+'°', wx(1.5)+28, wy(0)-8);
+  }
+
+  function drawTrail() {
+    if (trailX.length < 2) return;
+    for (let i = 1; i < trailX.length; i++) {
+      const a = p.map(i, 0, trailX.length, 0, 140);
+      p.stroke(200,168,109,a); p.strokeWeight(1.5);
+      p.line(wx(trailX[i-1]), wy(trailY[i-1]), wx(trailX[i]), wy(trailY[i]));
+    }
+  }
+
+  function drawShadows() {
+    if (!isFlying && trailX.length < 2) return;
+    // Horizontal shadow tracer (red)
+    p.fill(217,112,96,180); p.noStroke();
+    p.circle(wx(ballX), wy(0), 7);
+    // Vertical shadow tracer (blue)
+    p.fill(109,168,200,180);
+    p.circle(wx(CX/SCALE * 0.1), wy(ballY), 7);  // left wall
+    p.fill(109,168,200,80);
+    p.circle(wx(ballX), wy(ballY > 0 ? ballY : 0), 5);
+
+    // Shadow trails
+    if (trailX.length > 1) {
+      // H shadow trail
+      for (let i = 1; i < trailX.length; i++) {
+        const a = p.map(i, 0, trailX.length, 0, 100);
+        p.stroke(217,112,96,a); p.strokeWeight(1.2);
+        p.line(wx(trailX[i-1]), wy(0), wx(trailX[i]), wy(0));
+      }
+      // V shadow trail on left edge
+      for (let i = 1; i < trailY.length; i++) {
+        const a = p.map(i, 0, trailY.length, 0, 100);
+        const y0 = trailY[i-1] > 0 ? trailY[i-1] : 0;
+        const y1 = trailY[i]   > 0 ? trailY[i]   : 0;
+        p.stroke(109,168,200,a); p.strokeWeight(1.2);
+        p.line(wx(0.1), wy(y0), wx(0.1), wy(y1));
+      }
+    }
+  }
+
+  function drawBall() {
+    // Glow
+    p.noStroke();
+    p.fill(200,168,109,15); p.circle(wx(ballX), wy(ballY), 32);
+    p.fill(200,168,109,25); p.circle(wx(ballX), wy(ballY), 22);
+    // Ball
+    p.fill(220,185,120); p.stroke(160,130,80); p.strokeWeight(1);
+    p.circle(wx(ballX), wy(ballY), 16);
+    // Shine
+    p.noStroke(); p.fill(255,240,200,100);
+    p.circle(wx(ballX)-2, wy(ballY)-2, 5);
+  }
+
+  function drawArrow(p, x1, y1, x2, y2, col) {
+    p.stroke(...col); p.strokeWeight(2);
+    p.line(x1, y1, x2, y2);
+    const angle = Math.atan2(y2-y1, x2-x1);
+    const hl = 8;
+    p.fill(...col); p.noStroke();
+    p.beginShape();
+    p.vertex(x2, y2);
+    p.vertex(x2 - hl*Math.cos(angle-0.4), y2 - hl*Math.sin(angle-0.4));
+    p.vertex(x2 - hl*Math.cos(angle+0.4), y2 - hl*Math.sin(angle+0.4));
+    p.endShape(p.CLOSE);
+  }
+
+  p.draw = function() {
+    p.background(19, 20, 16);
+    drawGrid();
+
+    if (isFlying) {
+      t++;
+      ballX += velX * 0.04;
+      ballY += velY * 0.04;
+      velY  -= GRAVITY * 0.04;
+
+      if (ballY <= 0 && t > 5) {
+        ballY = 0; velX = 0; velY = 0;
+        isFlying = false;
+      }
+
+      if (trailX.length === 0 || Math.abs(ballX - trailX[trailX.length-1]) > 0.05 || Math.abs(ballY - trailY[trailY.length-1]) > 0.05) {
+        trailX.push(ballX); trailY.push(ballY > 0 ? ballY : 0);
+        if (trailX.length > 120) { trailX.shift(); trailY.shift(); }
+      }
+    }
+
+    drawTrail();
+    drawShadows();
+    drawAngleGuide();
+    drawBall();
+
+    // Legend
+    p.noStroke(); p.textSize(9); p.textAlign(p.LEFT, p.TOP);
+    p.fill(200,168,109,160); p.text('⚽ total vector', W-140, 10);
+    p.fill(217,112,96,160);  p.text('● î component (horizontal)', W-180, 24);
+    p.fill(109,168,200,160); p.text('● ĵ component (vertical)', W-175, 38);
+  };
+});
+
+syncControls();
+</script>
+</body>
+</html>
